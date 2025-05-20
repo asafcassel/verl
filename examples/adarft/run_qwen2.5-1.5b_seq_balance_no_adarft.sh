@@ -19,12 +19,6 @@ python3 -B -m verl.trainer.main_ppo \
     data.train_batch_size=1024 \
     data.max_prompt_length=1024 \
     data.max_response_length=3000 \
-    data.adarft.enable=enable \
-    data.adarft.beta=0.5 \
-    data.adarft.alpha=2 \
-    data.adarft.eta=50 \
-    data.adarft.d_min=0 \
-    data.adarft.d_max=100 \
     data.truncation='left' \
     actor_rollout_ref.model.path=Qwen/Qwen2.5-Math-1.5B \
     actor_rollout_ref.actor.optim.lr=1e-6 \
@@ -56,7 +50,7 @@ python3 -B -m verl.trainer.main_ppo \
     trainer.critic_warmup=0 \
     trainer.logger=['console','wandb'] \
     trainer.project_name='verl_examples' \
-    trainer.experiment_name='Qwen2.5-Math-1.5B--deepscaler-'${task_type}'--adarft' \
+    trainer.experiment_name='Qwen2.5-Math-1.5B--deepscaler-'${task_type} \
     trainer.n_gpus_per_node=4 \
     trainer.nnodes=1 \
     trainer.save_freq=10 \

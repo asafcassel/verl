@@ -1,16 +1,21 @@
+#!/bin/bash
+
 set -x
 
 if [ "$#" -eq 0 ]; then
-    task_type=skew_difficult
+    task_type=uniform
+    train_path='verl/verl/data/deepscaler_'${task_type}'_train.parquet'
 else
     task_type="${1}"
+    train_path='verl/verl/data/deepscaler_percentiles/train_percentiles_'${task_type}'.parquet'
 fi
 
 gsm8k_test_path=verl/verl/data/gsm8k/test.parquet
-deepscaler_skew_difficult_train_path='verl/verl/data/deepscaler_'${task_type}'_train.parquet'
+base_test_path=verl/verl/data/deepscaler_percentiles/test_percentiles
+base_train_path=verl/verl/data/deepscaler_percentiles/train_percentiles
 
-train_files="['$deepscaler_skew_difficult_train_path']"
-test_files="['$gsm8k_test_path']"
+train_files="['$train_path']"
+test_files="['${base_test_path}_0-20.parquet','${base_test_path}_20-40.parquet','${base_test_path}_40-60.parquet','${base_test_path}_60-80.parquet','${base_test_path}_80-100.parquet']"
 
 # export VLLM_ATTENTION_BACKEND=XFORMERS
 python3 -B -m verl.trainer.main_ppo \
@@ -19,12 +24,6 @@ python3 -B -m verl.trainer.main_ppo \
     data.train_batch_size=1024 \
     data.max_prompt_length=1024 \
     data.max_response_length=3000 \
-    data.adarft.enable=enable \
-    data.adarft.beta=0.5 \
-    data.adarft.alpha=2 \
-    data.adarft.eta=50 \
-    data.adarft.d_min=0 \
-    data.adarft.d_max=100 \
     data.truncation='left' \
     actor_rollout_ref.model.path=Qwen/Qwen2.5-Math-1.5B \
     actor_rollout_ref.actor.optim.lr=1e-6 \
@@ -55,10 +54,10 @@ python3 -B -m verl.trainer.main_ppo \
     algorithm.kl_ctrl.kl_coef=0.001 \
     trainer.critic_warmup=0 \
     trainer.logger=['console','wandb'] \
-    trainer.project_name='verl_examples' \
-    trainer.experiment_name='Qwen2.5-Math-1.5B--deepscaler-'${task_type}'--adarft' \
+    trainer.project_name='deepscaler_percentiles' \
+    trainer.experiment_name='Qwen2.5-Math-1.5B--deepscaler-percentiles-'${task_type} \
     trainer.n_gpus_per_node=4 \
     trainer.nnodes=1 \
-    trainer.save_freq=10 \
+    trainer.save_freq=50 \
     trainer.test_freq=5 \
-    trainer.total_epochs=12 ${@:2}
+    trainer.total_epochs=15 ${@:2}

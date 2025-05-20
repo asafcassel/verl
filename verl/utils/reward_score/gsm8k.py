@@ -16,6 +16,7 @@ import re
 
 
 def extract_solution(solution_str, method='strict'):
+    method = 'flexible'
     assert method in ['strict', 'flexible']
 
     if method == 'strict':

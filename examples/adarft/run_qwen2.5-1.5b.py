@@ -7,7 +7,7 @@ train_end_group = 8
 b = 100 // num_groups
 # Determine task_type and train_files based on command-line arguments
 if len(sys.argv) == 1:
-    task_type = "uniform"
+    task_type = f"percentiles_{b * train_start_group}-{b * (train_end_group + 1)}"
     base_train_path = "verl/verl/data/deepscaler_percentiles/train_percentiles"
     train_files = [f"{base_train_path}_{b*i}-{b*(i+1)}.parquet" for i in range(train_start_group, train_end_group + 1)]
 else:
@@ -66,7 +66,7 @@ command = [
     "trainer.nnodes=1",
     "trainer.save_freq=100",
     "trainer.test_freq=15",
-    f"trainer.total_epochs={75 / len(train_files)}",
+    f"trainer.total_epochs={75 // len(train_files)}",
 ]
 
 # Add any additional arguments passed to the Python script

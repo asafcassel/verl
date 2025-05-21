@@ -53,7 +53,7 @@ def split_to_percentiles(ds, num_groups):
 
 
 if __name__ == '__main__':
-    num_groups = 5
+    num_groups = 10
     parser = argparse.ArgumentParser()
     parser.add_argument('--local_dir', default='data/deepscaler_percentiles')
     parser.add_argument('--hdfs_dir', default=None)

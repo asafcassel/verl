@@ -4,17 +4,16 @@ set -x
 
 if [ "$#" -eq 0 ]; then
     task_type=uniform
-    train_path='verl/verl/data/deepscaler_'${task_type}'_train.parquet'
+    base_train_path=verl/verl/data/deepscaler_percentiles/train_percentiles
+    train_files="['${base_train_path}_0-20.parquet','${base_train_path}_20-40.parquet','${base_train_path}_40-60.parquet','${base_train_path}_60-80.parquet','${base_train_path}_80-100.parquet']"
 else
     task_type="${1}"
     train_path='verl/verl/data/deepscaler_percentiles/train_percentiles_'${task_type}'.parquet'
+    train_files="['$train_path']"
 fi
 
 gsm8k_test_path=verl/verl/data/gsm8k/test.parquet
 base_test_path=verl/verl/data/deepscaler_percentiles/test_percentiles
-base_train_path=verl/verl/data/deepscaler_percentiles/train_percentiles
-
-train_files="['$train_path']"
 test_files="['${base_test_path}_0-20.parquet','${base_test_path}_20-40.parquet','${base_test_path}_40-60.parquet','${base_test_path}_60-80.parquet','${base_test_path}_80-100.parquet']"
 
 # export VLLM_ATTENTION_BACKEND=XFORMERS

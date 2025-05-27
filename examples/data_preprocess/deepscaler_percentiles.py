@@ -91,7 +91,7 @@ if __name__ == '__main__':
                         "ground_truth": example.pop('ground_truth')
                     },
                     "extra_info": {
-                        'difficulty': example.pop('solved_percentage'),
+                        'difficulty': 100 - example.pop('solved_percentage'),
                         'index': idx,
                         'split': split,
                     }

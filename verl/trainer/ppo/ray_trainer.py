@@ -429,7 +429,7 @@ class RayPPOTrainer(object):
             self.sampler = CurriculumSampler(
                 data_source=self.train_dataset,
                 batch_size=self.config.data.train_batch_size,
-                target_difficulty=0
+                target_difficulty=self.config.data.adarft.get("d_min", 0)
             )       
             self.train_dataloader = StatefulDataLoader(dataset=self.train_dataset,
                                                        num_workers=8,

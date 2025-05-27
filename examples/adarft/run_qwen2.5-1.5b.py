@@ -1,24 +1,35 @@
 import os
 import sys
 
+use_adarft = False
 num_groups = 10
-train_start_group = 3
+train_start_group = 2
 train_end_group = 8
 b = 100 // num_groups
+base_train_path = "verl/verl/data/deepscaler_percentiles/train_percentiles"
+
 # Determine task_type and train_files based on command-line arguments
 if len(sys.argv) == 1:
-    task_type = f"percentiles_{b * train_start_group}-{b * (train_end_group + 1)}"
-    base_train_path = "verl/verl/data/deepscaler_percentiles/train_percentiles"
+    task_type = f"{b * train_start_group}-{b * (train_end_group + 1)}"
     train_files = [f"{base_train_path}_{b*i}-{b*(i+1)}.parquet" for i in range(train_start_group, train_end_group + 1)]
 else:
     task_type = sys.argv[1]
-    train_path = f"verl/verl/data/deepscaler_percentiles/train_percentiles_{task_type}.parquet"
-    train_files = [train_path]
+    train_files = [f"{base_train_path}_{task_type}.parquet"]
 
 # Define test files
 base_test_path = "verl/verl/data/deepscaler_percentiles/test_percentiles"
 test_files = [f"{base_test_path}_{b*i}-{b*(i+1)}.parquet" for i in range(num_groups)]
 
+adarft = [
+    "data.adarft.enable=enable",
+    "data.adarft.beta=0.5",
+    "data.adarft.alpha=2",
+    "data.adarft.eta=3",
+    f"data.adarft.d_min={100 - (b * (train_end_group + 1))}",
+    f"data.adarft.d_max={100 - (b * train_start_group)}",
+]
+if not use_adarft:
+    adarft = []
 # Construct the command for the Python script
 command = [
     "python3",
@@ -30,9 +41,10 @@ command = [
     "data.train_batch_size=1024",
     "data.max_prompt_length=1024",
     "data.max_response_length=3000",
+    *adarft,
     "data.truncation='left'",
     "actor_rollout_ref.model.path=Qwen/Qwen2.5-Math-1.5B",
-    "actor_rollout_ref.actor.optim.lr=1e-6",
+    "actor_rollout_ref.actor.optim.lr=4e-6",
     "actor_rollout_ref.model.use_remove_padding=True",
     "actor_rollout_ref.actor.ulysses_sequence_parallel_size=1",
     "actor_rollout_ref.model.enable_gradient_checkpointing=True",
@@ -49,7 +61,7 @@ command = [
     "actor_rollout_ref.ref.log_prob_max_token_len_per_gpu=16000",
     "actor_rollout_ref.rollout.n=1",
     "critic.ulysses_sequence_parallel_size=1",
-    "critic.optim.lr=1e-5",
+    "critic.optim.lr=4e-5",
     "critic.ulysses_sequence_parallel_size=1",
     "critic.model.use_remove_padding=True",
     "critic.model.path=Qwen/Qwen2.5-Math-1.5B",
@@ -64,9 +76,9 @@ command = [
     f"trainer.experiment_name='Qwen2.5-Math-1.5B--deepscaler-percentiles-{task_type}'",
     "trainer.n_gpus_per_node=4",
     "trainer.nnodes=1",
-    "trainer.save_freq=100",
-    "trainer.test_freq=15",
-    f"trainer.total_epochs={75 // len(train_files)}",
+    "trainer.save_freq=400",
+    "trainer.test_freq=20",
+    f"trainer.total_epochs={500 // len(train_files)}",
 ]
 
 # Add any additional arguments passed to the Python script

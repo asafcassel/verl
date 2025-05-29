@@ -20,7 +20,7 @@ class HedgeSampler(Sampler):
         if init_type == 'uniform':
             self.logits = torch.zeros(len(data_source))
         elif init_type == 'softmax':
-            self.logits = self.difficulties.detach().clone()
+            self.logits = -self.difficulties.detach().clone()
         else:
             raise f"{init_type=} is not a valid choice"
         
@@ -48,7 +48,6 @@ class HedgeSampler(Sampler):
             sample_losses /= (self.probs + gamma)
         self.logits -= (eta * sample_losses)
         self.probs = torch.nn.functional.softmax(self.logits, dim=0)
-        self.cur_samples = []
         
         # Return difficulty average and std
         difficulty_mean = torch.dot(self.difficulties, self.probs)
@@ -60,6 +59,7 @@ class HedgeSampler(Sampler):
             'critic/difficulty_sample_mean': torch.mean(self.difficulties[self.cur_samples]).item(),
             'critic/difficulty_sample_std': torch.std(self.difficulties[self.cur_samples]).item(),
         }
+        self.cur_samples = []
         return sample_metrics
 
     def __len__(self):

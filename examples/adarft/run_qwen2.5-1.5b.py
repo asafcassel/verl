@@ -1,7 +1,7 @@
 import os
 import sys
 
-use_adarft = False
+custom_sampler = 'hedge'
 num_groups = 10
 train_start_group = 2
 train_end_group = 8
@@ -20,16 +20,29 @@ else:
 base_test_path = "verl/verl/data/deepscaler_percentiles/test_percentiles"
 test_files = [f"{base_test_path}_{b*i}-{b*(i+1)}.parquet" for i in range(num_groups)]
 
-adarft = [
-    "data.adarft.enable=enable",
-    "data.adarft.beta=0.5",
-    "data.adarft.alpha=2",
-    "data.adarft.eta=3",
-    f"data.adarft.d_min={100 - (b * (train_end_group + 1))}",
-    f"data.adarft.d_max={100 - (b * train_start_group)}",
-]
-if not use_adarft:
-    adarft = []
+custom_sampler_config = []
+if custom_sampler is not None:
+    task_type = f"{task_type}_{custom_sampler}"
+    if custom_sampler == 'hedge':
+        custom_sampler_config = [
+            "data.hedge.enable=enable",
+            "data.hedge.init_type=softmax",
+            "data.hedge.replacement=True",
+            "data.hedge.eta=0.02",
+            "data.hedge.gamma=0.01",
+        ]
+    elif custom_sampler == 'adarft':
+        custom_sampler_config = [
+            "data.adarft.enable=enable",
+            "data.adarft.beta=0.5",
+            "data.adarft.alpha=2",
+            "data.adarft.eta=3",
+            f"data.adarft.d_min={100 - (b * (train_end_group + 1))}",
+            f"data.adarft.d_max={100 - (b * train_start_group)}",
+        ]
+    else:
+        raise f'Invalid custom sampler {custom_sampler}'
+    
 # Construct the command for the Python script
 command = [
     "python3",
@@ -41,7 +54,7 @@ command = [
     "data.train_batch_size=1024",
     "data.max_prompt_length=1024",
     "data.max_response_length=3000",
-    *adarft,
+    *custom_sampler_config,
     "data.truncation='left'",
     "actor_rollout_ref.model.path=Qwen/Qwen2.5-Math-1.5B",
     "actor_rollout_ref.actor.optim.lr=4e-6",
@@ -60,7 +73,6 @@ command = [
     "actor_rollout_ref.ref.fsdp_config.param_offload=True",
     "actor_rollout_ref.ref.log_prob_max_token_len_per_gpu=16000",
     "actor_rollout_ref.rollout.n=1",
-    "critic.ulysses_sequence_parallel_size=1",
     "critic.optim.lr=4e-5",
     "critic.ulysses_sequence_parallel_size=1",
     "critic.model.use_remove_padding=True",

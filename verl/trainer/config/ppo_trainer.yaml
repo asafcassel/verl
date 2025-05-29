@@ -22,6 +22,12 @@ data:
     eta: 50   # Step size: scales how much the target difficulty should change based on the reward signal; maps reward difference (0–1) to difficulty scale (0–100).
     d_min: 0  # Minimum allowed difficulty for curriculum sampling.
     d_max: 100 # Maximum allowed difficulty for curriculum sampling.
+  hedge:
+    enable: False
+    init_type: softmax
+    replacement: True
+    eta: 0.02   # Step size: scales how much the target difficulty should change based on the reward signal; maps reward difference (0–1) to difficulty scale (0–100).
+    gamma: 0.01
 
 actor_rollout_ref:
   hybrid_engine: True

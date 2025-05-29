@@ -423,7 +423,22 @@ class RayPPOTrainer(object):
         ), f'dataset truncation {self.train_dataset.truncation} must be the same as config {self.config.data.get("truncation", "error")}'
         
         # use sampler for better ckpt resume
-        if self.config.data.adarft.enable:
+        if self.config.data.hedge.enable:
+            from .hedge_sampler import HedgeSampler
+            train_dataloader_generator = torch.Generator()
+            train_dataloader_generator.manual_seed(self.config.data.get('seed', 1))
+            self.sampler = HedgeSampler(
+                data_source=self.train_dataset,
+                batch_size=self.config.data.train_batch_size,
+                generator=train_dataloader_generator,
+                init_type=self.config.data.hedge.init_type,
+                replacement=self.config.data.hedge.replacement,
+            )       
+            self.train_dataloader = StatefulDataLoader(dataset=self.train_dataset,
+                                                    #    num_workers=8,
+                                                       collate_fn=collate_fn,
+                                                       batch_sampler=self.sampler)
+        elif self.config.data.adarft.enable:
             # Use CurriculumSampler
             from .custom_sampler import CurriculumSampler
             self.sampler = CurriculumSampler(
@@ -953,7 +968,14 @@ class RayPPOTrainer(object):
                                                   lam=self.config.algorithm.lam,
                                                   num_repeat=self.config.actor_rollout_ref.rollout.n)
 
-                    if self.config.data.adarft.enable:
+                    if self.config.data.hedge.enable:
+                        eta = self.config.data.hedge.eta
+                        gamma = self.config.data.hedge.get('gamma', 0)
+                        sequence_reward = batch.batch['token_level_rewards'].sum(-1).detach()
+                        sample_metrics = self.sampler.update_sampling_probabilities(sequence_reward, eta, gamma)
+                        metrics.update(sample_metrics)
+
+                    elif self.config.data.adarft.enable:
                         beta = self.config.data.adarft.beta
                         alpha = self.config.data.adarft.alpha
                         eta = self.config.data.adarft.eta

@@ -7,14 +7,18 @@ train_start_group = 2
 train_end_group = 8
 b = 100 // num_groups
 base_train_path = "verl/verl/data/deepscaler_percentiles/train_percentiles"
+resume_mode = 'auto'  # auto / disable / resume_path
+resume_from_path = ''
 
-# Determine task_type and train_files based on command-line arguments
-if len(sys.argv) == 1:
-    task_type = f"{b * train_start_group}-{b * (train_end_group + 1)}"
-    train_files = [f"{base_train_path}_{b*i}-{b*(i+1)}.parquet" for i in range(train_start_group, train_end_group + 1)]
-else:
-    task_type = sys.argv[1]
-    train_files = [f"{base_train_path}_{task_type}.parquet"]
+task_type = f"{b * train_start_group}-{b * (train_end_group + 1)}"
+train_files = [f"{base_train_path}_{b*i}-{b*(i+1)}.parquet" for i in range(train_start_group, train_end_group + 1)]
+
+# resume options
+if len(sys.argv) > 1:
+    resume_mode = sys.argv[1]
+    if resume_mode not in ['auto', 'disable']:
+        resume_from_path = resume_mode
+        resume_mode = 'resume_path'
 
 # Define test files
 base_test_path = "verl/verl/data/deepscaler_percentiles/test_percentiles"
@@ -91,7 +95,12 @@ command = [
     "trainer.save_freq=400",
     "trainer.test_freq=20",
     f"trainer.total_epochs={500 // len(train_files)}",
+    f"trainer.resume_mode={resume_mode}",
+    f"trainer.resume_from_path={resume_from_path}" if resume_from_path else '',
 ]
+
+# remove empty commands
+command = [x for x in command if x]
 
 # Add any additional arguments passed to the Python script
 if len(sys.argv) > 2:

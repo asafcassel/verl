@@ -45,7 +45,13 @@ class HedgeSampler(Sampler):
         indices = torch.tensor([self.cur_samples, [i for i in range(self.batch_size)]])
         sample_losses = torch.sparse_coo_tensor(indices, hedge_losses, size=(len(self.data_source),self.batch_size)).sum(-1).to_dense()
         if gamma > 0:
-            sample_losses /= (self.probs + gamma)
+            # if self.replacement:
+            log_1_p = torch.log(torch.maximum(1 - self.probs, 1e-16))
+            sample_prob = 1 - torch.exp(self.batch_size * log_1_p)
+            # else:
+                # TODO: implment different importance weights for no replacement
+                # pass
+            sample_losses /= (sample_prob + gamma)
         self.logits -= (eta * sample_losses)
         self.probs = torch.nn.functional.softmax(self.logits, dim=0)
         

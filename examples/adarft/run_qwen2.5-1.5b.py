@@ -29,7 +29,7 @@ if custom_sampler is not None:
             "data.hedge.init_type=softmax",
             "data.hedge.replacement=True",
             "data.hedge.eta=0.02",
-            "data.hedge.gamma=0.01",
+            "data.hedge.gamma=0.001",
         ]
     elif custom_sampler == 'adarft':
         custom_sampler_config = [

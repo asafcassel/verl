@@ -14,7 +14,8 @@ def run_verl_generation(group_idx, ckpt_step):
     if ckpt_step == 0:
         model_path = "Qwen/Qwen2.5-Math-1.5B"
     else:
-        model_path = os.path.join(home, "checkpoints", "deepscaler_percentiles", "Qwen2.5-Math-1.5B--deepscaler-percentiles-20-90_hedge", f"global_step_{ckpt_step}")
+        # checkpoint after conversion to huggingface using: convert_ckpt_to_huggingface.py 
+        model_path = os.path.join(home, "checkpoints", f"Huggingface_Qwen2.5-Math-1.5B--deepscaler-percentiles-percentiles_20-90_lr_4x_step_{ckpt_step}")
 
     command = [
         "python3",
@@ -64,5 +65,7 @@ if __name__ == "__main__":
         ckpt_step = sys.argv[1]
     else:
         ckpt_step = 0
-    for i in range(10):
+    start_group = 0
+    end_group = 9
+    for i in range(start_group, end_group + 1):
         run_verl_generation(group_idx=i, ckpt_step=ckpt_step)
